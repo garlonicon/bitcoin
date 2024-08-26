@@ -34,7 +34,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     int64_t nCurrentTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
     int64_t nFutureTime = pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing*2 + 1;
     int64_t nReplacedTime = std::max<int64_t>(nCurrentTime, nFutureTime);
-    if (pIndexPrev->nBits > 0x1d00ffff) {
+    if (pindexPrev->nBits > 0x1d00ffff) {
         nReplacedTime = nCurrentTime; //there is no need to replace time, if blocks are easier to mine than that
     }
     int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, nReplacedTime)};
