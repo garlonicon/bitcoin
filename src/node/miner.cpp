@@ -31,11 +31,7 @@ namespace node {
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nCurrentTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
-    int64_t nFutureTime = pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing*2 + 1;
-    int64_t nReplacedTime = std::max<int64_t>(nCurrentTime, nFutureTime);
-    int64_t nTestnetTime = ((consensusParams.fPowAllowMinDifficultyBlocks) ? (nReplacedTime) : (nCurrentTime));
-    int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, nTestnetTime)};
+    int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
     if (consensusParams.enforce_BIP94) {
         // Height of block to be mined.
@@ -55,6 +51,16 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     }
 
     return nNewTime - nOldTime;
+}
+
+int64_t UpdateTimeForTestnet(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+{
+    int64_t nDiffTime = UpdateTime(pblock, consensusParams, pindexPrev);
+    int64_t nMinimalDiffTime = consensusParams.nPowTargetSpacing*2;
+    if ((consensusParams.fPowAllowMinDifficultyBlocks) && (nDiffTime <= nMinimalDiffTime)) {
+        nDiffTime = nMinimalDiffTime + 1;
+    }
+    return nDiffTime;    
 }
 
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
