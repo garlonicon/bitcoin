@@ -39,6 +39,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
         if (height % consensusParams.DifficultyAdjustmentInterval() == 0) {
             nNewTime = std::max<int64_t>(nNewTime, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
         }
+        if ((consensusParams.fPowAllowMinDifficultyBlocks) && (!consensusParams.fPowNoRetargeting))
+        {
+            nNewTime = std::max<int64_t>(nNewTime, consensusParams.nPowTargetSpacing*2 + 1);
+        }
     }
 
     if (nOldTime < nNewTime) {
@@ -51,16 +55,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     }
 
     return nNewTime - nOldTime;
-}
-
-int64_t UpdateTimeForTestnet(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
-{
-    int64_t nDiffTime = UpdateTime(pblock, consensusParams, pindexPrev);
-    int64_t nMinimalDiffTime = consensusParams.nPowTargetSpacing*2;
-    if ((consensusParams.fPowAllowMinDifficultyBlocks) && (nDiffTime <= nMinimalDiffTime)) {
-        nDiffTime = nMinimalDiffTime + 1;
-    }
-    return nDiffTime;    
 }
 
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
