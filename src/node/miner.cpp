@@ -39,6 +39,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
         if (height % consensusParams.DifficultyAdjustmentInterval() == 0) {
             nNewTime = std::max<int64_t>(nNewTime, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
         }
+        if ((consensusParams.fPowAllowMinDifficultyBlocks) && (!consensusParams.fPowNoRetargeting))
+        {
+            nNewTime = std::max<int64_t>(nNewTime, consensusParams.nPowTargetSpacing*2 + 1);
+        }
     }
 
     if (nOldTime < nNewTime) {
